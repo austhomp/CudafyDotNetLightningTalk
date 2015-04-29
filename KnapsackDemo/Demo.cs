@@ -38,7 +38,7 @@ namespace KnapsackDemo
                 new PackableItem("toy triceratops", 10, 19)
             };
 
-            var scenario = new KnapsackScenario(items.Take(14) , 100);
+            var scenario = new KnapsackScenario(items.Take(20) , 100);
             var cpuResult = cpuBruteForceSolver.Solve(scenario);
             foreach (var item in cpuResult.PackedItems)
             {

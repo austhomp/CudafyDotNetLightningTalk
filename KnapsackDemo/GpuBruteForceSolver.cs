@@ -1,8 +1,6 @@
 using System;
-using System.Diagnostics;
 using System.Linq;
 using Cudafy;
-using Cudafy.Compilers;
 using Cudafy.Host;
 using Cudafy.Translator;
 
@@ -15,11 +13,13 @@ namespace KnapsackDemo
             var startTime = DateTime.Now;
             var items = scenario.AvailableItems.ToArray();
             var count = items.Length;
-            var permutations = (int)Math.Pow(2, count);
+            var permutations = 2 << count;
+            const int gpuBlocks = 128;
+            var chunkSize = permutations / gpuBlocks + ((permutations % gpuBlocks > 0) ? 1 : 0);
 
             int[] weights = new int[count];
             int[] values = new int[count];
-            int[] results = new int[permutations];
+            int[,] results = new int[gpuBlocks, 2];
             for (int i = 0; i < count; i++)
             {
                 weights[i] = items[i].Weight;
@@ -33,28 +33,29 @@ namespace KnapsackDemo
             gpu.LoadModule(km);
 
             // allocate the memory on the GPU
-            int[] dev_c = gpu.Allocate<int>(permutations);
+            int[,] dev_results = gpu.Allocate<int>(gpuBlocks, 2);
             
-            // copy the arrays 'a' and 'b' to the GPU
-            int[] dev_a = gpu.CopyToDevice(weights);
-            int[] dev_b = gpu.CopyToDevice(values);
+            // copy the arrays 'weights' and 'values' to the GPU
+            int[] dev_weights = gpu.CopyToDevice(weights);
+            int[] dev_values = gpu.CopyToDevice(values);
 
-            gpu.Launch(128, 128).add(scenario.MaxWeight, dev_a, dev_b, dev_c);
-
-            // copy the array 'c' back from the GPU to the CPU
-            gpu.CopyFromDevice(dev_c, results);
+            var gpuStart = DateTime.Now;
+            gpu.Launch(128, 1).add(chunkSize, scenario.MaxWeight, dev_weights, dev_values, dev_results);
+            var gpuEnd = DateTime.Now;
+            // copy the array 'results' back from the GPU to the CPU
+            gpu.CopyFromDevice(dev_results, results);
 
             gpu.FreeAll();
 
             long best = 0;
             int bestValue = 0;
 
-            for (int i = 0; i < permutations; i++)
+            for (int i = 0; i < gpuBlocks; i++)
             {
-                if (results[i] > bestValue)
+                if (results[i,1] > bestValue)
                 {
-                    bestValue = results[i];
-                    best = i;
+                    bestValue = results[i, 1];
+                    best = results[i,0];
                 }
             }
             var bestList = PermutationHelper.GetList(items, best);
@@ -65,36 +66,45 @@ namespace KnapsackDemo
         }
 
         [Cudafy]
-        public static void add(GThread thread, int maxWeight, int[] a, int[] b, int[] c)
+        public static void add(GThread thread, int chunkSize, int maxWeight, int[] weights, int[] values, int[,] results)
         {
-            int tid = thread.threadIdx.x + thread.blockIdx.x * thread.blockDim.x;
-            //Debug.WriteLine("%d", tid);
-            if (tid < c.Length)
+            int tid = (thread.threadIdx.x + thread.blockIdx.x*thread.blockDim.x);
+            results[tid,0] = 0;
+            results[tid,1] = 0;
+
+            int itemCount = values.Length;
+            int bestPermutation = 0;
+            int bestValue = 0;
+
+            int permutation = tid * chunkSize;
+            int lastPermutation = permutation + chunkSize;
+
+            while (permutation < lastPermutation)
             {
-                int items = a.Length;
                 int totalValue = 0;
                 int totalWeight = 0;
-                for (int index = 0; index < items; index++)
+                for (int index = 0; index < itemCount; index++)
                 {
-                    var valueAtBit = tid & (1 << index);
+                    var valueAtBit = permutation & (1 << index);
+
                     if (valueAtBit > 0)
                     {
-                        totalWeight += a[index];
-                        totalValue += b[index];
+                        totalValue += values[index];
+                        totalWeight += weights[index];
                     }
                 }
 
+                if (totalWeight <= maxWeight && totalValue > bestValue)
+                {
+                    bestPermutation = permutation;
+                    bestValue = totalValue;
+                }
 
-                if (totalWeight <= maxWeight)
-                {
-                    c[tid] = totalValue;
-                }
-                else
-                {
-                    c[tid] = -1;
-                }
+                permutation++;
             }
-        }
 
+            results[tid, 0] = bestPermutation;
+            results[tid, 1] = bestValue;
+        }
     }
 }

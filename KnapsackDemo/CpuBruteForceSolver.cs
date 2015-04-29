@@ -9,8 +9,8 @@ namespace KnapsackDemo
         {
             var startTime = DateTime.Now;
             var items = scenario.AvailableItems.ToArray();
-            var count = items.LongLength;
-            var permutations = Math.Pow(2, count) / 1;
+            var count = items.Length;
+            var permutations = (int) Math.Pow(2, count);
             long best = 0;
             int bestValue = 0;
             int bestWeight = 0;
