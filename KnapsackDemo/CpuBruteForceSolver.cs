@@ -10,18 +10,18 @@ namespace KnapsackDemo
             var startTime = DateTime.Now;
             var items = scenario.AvailableItems.ToArray();
             var count = items.Length;
-            var permutations = (int) Math.Pow(2, count);
+            long permutations = 2L << count;
             long best = 0;
             int bestValue = 0;
             int bestWeight = 0;
 
-            for (int permutation = 0; permutation < permutations; permutation++)
+            for (long permutation = 0; permutation < permutations; permutation++)
             {
                 int totalValue = 0;
                 int totalWeight = 0;
                 for (int index = 0; index < count; index++)
                 {
-                    var valueAtBit = permutation & (1 << index);
+                    var valueAtBit = permutation & (1L << index);
                     if (valueAtBit > 0)
                     {
                         totalValue += items[index].Value;

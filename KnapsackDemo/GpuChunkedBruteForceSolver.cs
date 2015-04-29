@@ -15,12 +15,12 @@ namespace KnapsackDemo
             var startTime = DateTime.Now;
             var items = scenario.AvailableItems.ToArray();
             var count = items.Length;
-            var permutations = 2 << count;
+            long permutations = 2L << count;
             const int gpuBlocks = 1024;
             const int gpuBlockThreads = 1024;
             const int gpuThreads = gpuBlocks*gpuBlockThreads;
 
-            Console.WriteLine("Using {0} gpu threads", gpuThreads);
+            Console.WriteLine("Using {0:N0} gpu threads", gpuThreads);
 
             int[] weights = new int[count];
             int[] values = new int[count];
@@ -47,7 +47,7 @@ namespace KnapsackDemo
             long bestPermutation = 0;
             int bestValue = 0;
 
-            for (int n = 0; n < permutations; n += gpuThreads)
+            for (long n = 0; n < permutations; n += gpuThreads)
             {
                 gpu.Launch(gpuBlocks, gpuBlockThreads).add(n, scenario.MaxWeight, dev_weights, dev_values, dev_results);
 
@@ -74,17 +74,17 @@ namespace KnapsackDemo
         }
 
         [Cudafy]
-        public static void add(GThread thread, int offset, int maxWeight, int[] a, int[] b, int[] c)
+        public static void add(GThread thread, long offset, int maxWeight, int[] a, int[] b, int[] c)
         {
             int tid = thread.threadIdx.x + thread.blockIdx.x*thread.blockDim.x;
-            int permutation = tid + offset;
+            long permutation = tid + offset;
             
             int items = a.Length;
             int totalValue = 0;
             int totalWeight = 0;
             for (int index = 0; index < items; index++)
             {
-                var valueAtBit = permutation & (1 << index);
+                var valueAtBit = permutation & (1L << index);
                 if (valueAtBit > 0)
                 {
                     totalWeight += a[index];
