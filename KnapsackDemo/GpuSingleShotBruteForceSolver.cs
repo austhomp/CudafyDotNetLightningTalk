@@ -6,7 +6,7 @@ using Cudafy.Translator;
 
 namespace KnapsackDemo
 {
-    internal class GpuBruteForceSolver : IKnapsackSolver
+    internal class GpuSingleShotBruteForceSolver : IKnapsackSolver
     {
         public KnapsackSolution Solve(KnapsackScenario scenario)
         {
@@ -14,7 +14,7 @@ namespace KnapsackDemo
             var items = scenario.AvailableItems.ToArray();
             var count = items.Length;
             var permutations = 2 << count;
-            const int gpuBlocks = 128;
+            const int gpuBlocks = 1024;
             var chunkSize = permutations / gpuBlocks + ((permutations % gpuBlocks > 0) ? 1 : 0);
 
             int[] weights = new int[count];
@@ -39,15 +39,14 @@ namespace KnapsackDemo
             int[] dev_weights = gpu.CopyToDevice(weights);
             int[] dev_values = gpu.CopyToDevice(values);
 
-            var gpuStart = DateTime.Now;
-            gpu.Launch(128, 1).add(chunkSize, scenario.MaxWeight, dev_weights, dev_values, dev_results);
-            var gpuEnd = DateTime.Now;
+            gpu.Launch(gpuBlocks, 1).add(chunkSize, scenario.MaxWeight, dev_weights, dev_values, dev_results);
+
             // copy the array 'results' back from the GPU to the CPU
             gpu.CopyFromDevice(dev_results, results);
 
             gpu.FreeAll();
 
-            long best = 0;
+            long bestPermutation = 0;
             int bestValue = 0;
 
             for (int i = 0; i < gpuBlocks; i++)
@@ -55,10 +54,10 @@ namespace KnapsackDemo
                 if (results[i,1] > bestValue)
                 {
                     bestValue = results[i, 1];
-                    best = results[i,0];
+                    bestPermutation = results[i,0];
                 }
             }
-            var bestList = PermutationHelper.GetList(items, best);
+            var bestList = PermutationHelper.GetList(items, bestPermutation);
             int bestWeight = bestList.Sum(x => x.Weight);
 
             var endTime = DateTime.Now;

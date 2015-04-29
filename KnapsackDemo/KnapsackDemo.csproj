@@ -46,7 +46,9 @@
   <ItemGroup>
     <Compile Include="CpuBruteForceSolver.cs" />
     <Compile Include="Demo.cs" />
-    <Compile Include="GpuBruteForceSolver.cs" />
+    <Compile Include="GpuChunkedBruteForceSolver.cs" />
+    <Compile Include="GpuNaiveBruteForceSolver.cs" />
+    <Compile Include="GpuSingleShotBruteForceSolver.cs" />
     <Compile Include="IKnapsackSolver.cs" />
     <Compile Include="KnapsackScenario.cs" />
     <Compile Include="KnapsackSolution.cs" />
