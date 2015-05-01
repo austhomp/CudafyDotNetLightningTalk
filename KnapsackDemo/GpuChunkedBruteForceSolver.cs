@@ -34,6 +34,10 @@ namespace KnapsackDemo
             CudafyTranslator.GenerateDebug = true; // Needed for NSIGHT Cuda debugging
             CudafyModule km = CudafyTranslator.Cudafy();
 
+            var codeGenerationTime = DateTime.Now.Subtract(startTime);
+            Console.WriteLine("Code generation took {0:N1}s", codeGenerationTime.TotalSeconds);
+            startTime = DateTime.Now;
+
             GPGPU gpu = CudafyHost.GetDevice(CudafyModes.Target, CudafyModes.DeviceId);
             gpu.LoadModule(km);
 
