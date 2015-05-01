@@ -8,20 +8,19 @@ namespace KnapsackDemo
     {
         public void Execute()
         {
-            IKnapsackSolver cpuBruteForceSolver = new CpuBruteForceSolver();
-
             List<PackableItem> items = GenerateItems();
 
-            var scenario = new KnapsackScenario(items , 100);
+            var scenario = new KnapsackScenario(items, 100);
 
             Console.WriteLine("Starting Knapsack solver for {0} items", scenario.AvailableItems.Count());
             Console.WriteLine();
 
+            IKnapsackSolver cpuBruteForceSolver = new CpuBruteForceSolver();
             var cpuResult = cpuBruteForceSolver.Solve(scenario);
             DisplayPackedItems(cpuResult);
             Console.WriteLine();
-            Console.WriteLine("Packed {0} items out of {1}", cpuResult.PackedItems.Count(), scenario.AvailableItems.Count());
-            Console.WriteLine("Value: {0}\tWeight: {1}\tElapsed {2}", cpuResult.TotalValue, cpuResult.Weight, cpuResult.ElapsedTime);
+            Console.WriteLine("CPU Packed {0} items out of {1}", cpuResult.PackedItems.Count(), scenario.AvailableItems.Count());
+            Console.WriteLine("CPU Value: {0}\tWeight: {1}\tElapsed {2}", cpuResult.TotalValue, cpuResult.Weight, cpuResult.ElapsedTime);
 
             IKnapsackSolver gpuBruteForceSolver = new GpuChunkedBruteForceSolver();
             //IKnapsackSolver gpuBruteForceSolver = new GpuSingleShotBruteForceSolver();
@@ -30,8 +29,8 @@ namespace KnapsackDemo
             Console.WriteLine();
             var gpuResult = gpuBruteForceSolver.Solve(scenario);
 
-            Console.WriteLine("Packed {0} items out of {1}", gpuResult.PackedItems.Count(), scenario.AvailableItems.Count());
-            Console.WriteLine("Value: {0}\tWeight: {1}\tElapsed {2}", gpuResult.TotalValue, gpuResult.Weight, gpuResult.ElapsedTime);
+            Console.WriteLine("GPU Packed {0} items out of {1}", gpuResult.PackedItems.Count(), scenario.AvailableItems.Count());
+            Console.WriteLine("GPU Value: {0}\tWeight: {1}\tElapsed {2}", gpuResult.TotalValue, gpuResult.Weight, gpuResult.ElapsedTime);
 
             if (cpuResult.TotalValue == gpuResult.TotalValue && cpuResult.Weight == gpuResult.Weight)
             {

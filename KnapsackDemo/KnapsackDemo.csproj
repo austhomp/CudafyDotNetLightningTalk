@@ -46,6 +46,7 @@
   <ItemGroup>
     <Compile Include="CpuBruteForceSolver.cs" />
     <Compile Include="CpuOpenCLBruteForceSolver.cs" />
+    <Compile Include="CpuParallelForBruteForceSolver.cs" />
     <Compile Include="Demo.cs" />
     <Compile Include="GpuChunkedBruteForceSolver.cs" />
     <Compile Include="GpuNaiveBruteForceSolver.cs" />
