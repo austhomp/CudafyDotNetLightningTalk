@@ -26,7 +26,7 @@ namespace KnapsackDemo
                 values[i] = items[i].Value;
             }
 
-            CudafyTranslator.GenerateDebug = true; // Needed for NSIGHT Cuda debugging
+            //CudafyTranslator.GenerateDebug = true; // Needed for NSIGHT Cuda debugging but causes slowdown
             CudafyModule km = CudafyTranslator.Cudafy();
 
             var codeGenerationTime = DateTime.Now.Subtract(startTime);
