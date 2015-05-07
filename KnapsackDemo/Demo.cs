@@ -15,9 +15,9 @@ namespace KnapsackDemo
             Console.WriteLine("Starting Knapsack solver for {0} items", scenario.AvailableItems.Count());
             Console.WriteLine();
 
-            IKnapsackSolver cpuBruteForceSolver = new CpuBruteForceSolver();
+            IKnapsackSolver cpuBruteForceSolver = new CpuParallelForBruteForceSolver();
             var cpuResult = cpuBruteForceSolver.Solve(scenario);
-            DisplayPackedItems(cpuResult);
+            //DisplayPackedItems(cpuResult);
             Console.WriteLine();
             Console.WriteLine("CPU Packed {0} items out of {1}", cpuResult.PackedItems.Count(), scenario.AvailableItems.Count());
             Console.WriteLine("CPU Value: {0}\tWeight: {1}\tElapsed {2}", cpuResult.TotalValue, cpuResult.Weight, cpuResult.ElapsedTime);
@@ -32,7 +32,7 @@ namespace KnapsackDemo
             Console.WriteLine("GPU Packed {0} items out of {1}", gpuResult.PackedItems.Count(), scenario.AvailableItems.Count());
             Console.WriteLine("GPU Value: {0}\tWeight: {1}\tElapsed {2}", gpuResult.TotalValue, gpuResult.Weight, gpuResult.ElapsedTime);
 
-            if (cpuResult.TotalValue == gpuResult.TotalValue && cpuResult.Weight == gpuResult.Weight)
+            if (cpuResult.TotalValue == gpuResult.TotalValue && cpuResult.Weight == gpuResult.Weight && cpuResult.PackedItems.SequenceEqual(gpuResult.PackedItems))
             {
                 Console.WriteLine("\tGPU results match CPU results!");
             }
